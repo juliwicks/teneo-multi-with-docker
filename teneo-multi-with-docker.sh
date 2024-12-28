@@ -29,39 +29,42 @@ echo -e "${INFO}Generated MAC address: $mac_address${NC}"
 echo -e "${INFO}Changing Docker socket permissions...${NC}"
 sudo chmod 666 /var/run/docker.sock
 
-# Step 5: Create a Dockerfile for the Teneo Farm project
-echo -e "${INFO}Creating Dockerfile for Teneo Farm project...${NC}"
+# Step 5: Create a Dockerfile
+echo -e "${INFO}Creating Dockerfile...${NC}"
 cat <<EOF > Dockerfile
-# Use an official Node.js runtime as a parent image
-FROM node:16-slim
+# Use an official Python runtime as a parent image
+FROM python:3.9-slim
 
 # Set the working directory inside the container
 WORKDIR /app
 
 # Install necessary dependencies
 RUN apt update && \
-    apt install -y git nano
+    apt install -y git && \
+    pip install --upgrade pip
 
-# Clone the teneo-farm repository
-RUN git clone https://github.com/Zlkcyber/teneo-farm.git
+# Clone the teneo-cli repository
+RUN git clone https://github.com/juliwicks/teneo-cli
 
 # Set the working directory to the cloned repository
-WORKDIR /app/teneo-farm
+WORKDIR /app/teneo-cli
 
-# Install project dependencies
-RUN npm install
+# Install each Python package one by one
+RUN pip install aiohttp
+RUN pip install asyncio
+RUN pip install colorama
 
-# Command to run the main.js script
-CMD ["node", "main.js"]
+# Command to run the teneo-cli.py script
+CMD ["python3", "teneo-cli.py"]
 EOF
 
 # Step 6: Build the Docker image
 echo -e "${INFO}Building Docker image...${NC}"
-docker build -t teneo-farm .
+docker build -t teneo-cli-runner .
 
 # Step 7: Run the Docker container interactively
 echo -e "${INFO}Running Docker container interactively with name: $container_name${NC}"
-docker run -it --name "$container_name" --mac-address "$mac_address" --env UUID="$uuid" teneo-farm
+docker run -it --name "$container_name" --mac-address "$mac_address" --env UUID="$uuid" teneo-cli-runner
 
 # Step 8: Confirm the container is running
-echo -e "${SUCCESS}Docker container is running interactively. You can now interact with it.${NC}"
+echo -e "${SUCCESS}Docker container is set to auto-start and is currently running.${NC}"
