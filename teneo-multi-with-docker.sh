@@ -94,7 +94,9 @@ EOF
 
 # Step 9: Run the Docker container interactively
 echo -e "${INFO}Running Docker container interactively with name: $container_name...${NC}"
-docker run -it --name "$container_name" --mac-address "$mac_address" --env UUID="$uuid" teneo-cli-runner bash
+
+# We use "bash" here to start an interactive shell *after* running the script
+docker run -it --name "$container_name" --mac-address "$mac_address" --env UUID="$uuid" teneo-cli-runner bash -c "python3 teneo-cli.py && bash"
 
 # Step 10: Confirm the container is running interactively
 echo -e "${INFO}Docker container '$container_name' is now running interactively. You can execute the Python script manually or let it run as usual.${NC}"
