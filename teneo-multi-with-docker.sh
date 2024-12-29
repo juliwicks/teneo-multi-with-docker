@@ -36,8 +36,10 @@ if [[ "$use_proxy" == "yes" ]]; then
     proxy_type="http"
   elif [[ "$proxy_url" =~ ^socks5:// ]]; then
     proxy_type="socks5"
+  elif [[ "$proxy_url" =~ ^https:// ]]; then
+    proxy_type="https"
   else
-    echo -e "${ERROR}Unsupported proxy type. Only http and socks5 are supported.${NC}"
+    echo -e "${ERROR}Unsupported proxy type. Only http, https, and socks5 are supported.${NC}"
     exit 1
   fi
 else
@@ -90,29 +92,16 @@ https_proxy=$proxy_url
 ALL_PROXY=$proxy_url
 EOF
 
-# Step 9: Create Docker Compose file (removed version to avoid warning)
-echo -e "${INFO}Creating docker-compose.yml file...${NC}"
-cat <<EOF > docker-compose.yml
-services:
-  teneo-cli:
-    image: teneo-cli-runner
-    container_name: $container_name
-    mac_address: $mac_address
-    env_file:
-      - .env
-    restart: always
-EOF
-
-# Step 10: Enable auto-start for the container and run it interactively
+# Step 9: Run the Docker container interactively (without docker-compose)
 echo -e "${INFO}Running Docker container interactively with name: $container_name${NC}"
 docker run -it --name "$container_name" --mac-address "$mac_address" --env UUID="$uuid" teneo-cli-runner /bin/bash
 
-# Step 11: Enable Docker to auto-start on boot
+# Step 10: Enable Docker to auto-start on boot
 echo -e "${INFO}Enabling auto-start for Docker service...${NC}"
 sudo systemctl enable docker.service
 sudo systemctl enable containerd.service
 
-# Step 12: Check if the container is running
+# Step 11: Check if the container is running
 echo -e "${INFO}Checking Docker container status...${NC}"
 docker ps | grep "$container_name" > /dev/null
 if [[ $? -eq 0 ]]; then
