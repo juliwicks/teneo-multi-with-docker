@@ -88,8 +88,8 @@ ALL_PROXY=$proxy_url
 EOF
 
 # Step 8: Create Docker Compose file
-echo -e "${INFO}Creating docker compose.yml file...${NC}"
-cat <<EOF > docker compose.yml
+echo -e "${INFO}Creating docker-compose.yml file...${NC}"
+cat <<EOF > docker-compose.yml
 version: "3.8"
 services:
   teneo-cli:
@@ -98,7 +98,7 @@ services:
     mac_address: $mac_address
     env_file:
       - .env
-    restart: no
+    restart: always
 EOF
 
 # Step 9: Enable auto-start for the container
