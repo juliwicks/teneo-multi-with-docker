@@ -21,15 +21,31 @@ read container_name
 uuid=$(uuidgen)
 mac_address=$(printf '00:50:56:%02x:%02x:%02x' $(($RANDOM%256)) $(($RANDOM%256)) $(($RANDOM%256)))
 
-# Step 3: Show generated values
-echo -e "${INFO}Generated UUID: $uuid${NC}"
-echo -e "${INFO}Generated MAC address: $mac_address${NC}"
+# Step 3: Ask user if they want to use a proxy
+echo -e "${INFO}Do you want to use a proxy? (yes/no)${NC}"
+read use_proxy
+
+proxy_url=""
+proxy_type=""
+if [[ "$use_proxy" == "yes" ]]; then
+  echo -e "${INFO}Choose the proxy type (http/socks5):${NC}"
+  read proxy_type
+  
+  if [[ "$proxy_type" == "http" || "$proxy_type" == "socks5" ]]; then
+    echo -e "${INFO}Please enter the proxy in the format protocol://user:pass@ip:port${NC}"
+    read proxy_url
+    echo -e "${INFO}Using $proxy_type Proxy: $proxy_url${NC}"
+  else
+    echo -e "${ERROR}Invalid proxy type. Exiting.${NC}"
+    exit 1
+  fi
+fi
 
 # Step 4: Change Docker socket permissions to allow interaction
 echo -e "${INFO}Changing Docker socket permissions...${NC}"
 sudo chmod 666 /var/run/docker.sock
 
-# Step 5: Create a Dockerfile
+# Step 5: Create Dockerfile
 echo -e "${INFO}Creating Dockerfile...${NC}"
 cat <<EOF > Dockerfile
 # Use an official Python runtime as a parent image
@@ -39,8 +55,8 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Install necessary dependencies
-RUN apt update && \
-    apt install -y git && \
+RUN apt update && \\
+    apt install -y git && \\
     pip install --upgrade pip
 
 # Clone the teneo-cli repository
@@ -62,9 +78,38 @@ EOF
 echo -e "${INFO}Building Docker image...${NC}"
 docker build -t teneo-cli-runner .
 
-# Step 7: Run the Docker container interactively
-echo -e "${INFO}Running Docker container interactively with name: $container_name${NC}"
-docker run -it --name "$container_name" --mac-address "$mac_address" --env UUID="$uuid" teneo-cli-runner
+# Step 7: Create environment variables file
+echo -e "${INFO}Creating .env file for environment variables...${NC}"
+cat <<EOF > .env
+UUID=$uuid
+http_proxy=$proxy_url
+https_proxy=$proxy_url
+ALL_PROXY=$proxy_url
+EOF
 
-# Step 8: Confirm the container is running
-echo -e "${SUCCESS}Docker container is set to auto-start and is currently running.${NC}"
+# Step 8: Create Docker Compose file
+echo -e "${INFO}Creating docker-compose.yml file...${NC}"
+cat <<EOF > docker-compose.yml
+version: "3.8"
+services:
+  teneo-cli:
+    image: teneo-cli-runner
+    container_name: $container_name
+    mac_address: $mac_address
+    env_file:
+      - .env
+    restart: no
+EOF
+
+# Step 9: Enable auto-start for the container
+echo -e "${INFO}Enabling auto-start for Docker container on system boot...${NC}"
+docker-compose up -d
+sudo systemctl enable docker.service
+sudo systemctl enable containerd.service
+
+# Step 10: Confirm the container is running
+if [[ $? -eq 0 ]]; then
+  echo -e "${SUCCESS}Docker container '$container_name' is running and set to auto-start on boot.${NC}"
+else
+  echo -e "${ERROR}Failed to start the Docker container. Check for errors above.${NC}"
+fi
