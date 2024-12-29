@@ -75,7 +75,7 @@ RUN pip install aiohttp
 RUN pip install asyncio
 RUN pip install colorama
 
-# Command to run the teneo-cli.py script
+# Command to run the teneo-cli.py script by default
 CMD ["python3", "teneo-cli.py"]
 EOF
 
@@ -92,9 +92,9 @@ https_proxy=$proxy_url
 ALL_PROXY=$proxy_url
 EOF
 
-# Step 9: Run the Docker container interactively (without docker-compose)
-echo -e "${INFO}Running Docker container interactively with name: $container_name${NC}"
-docker run -it --name "$container_name" --mac-address "$mac_address" --env UUID="$uuid" teneo-cli-runner /bin/bash
+# Step 9: Run the Docker container interactively and execute python3 teneo-cli.py
+echo -e "${INFO}Running Docker container interactively with name: $container_name and executing Python script...${NC}"
+docker run -it --name "$container_name" --mac-address "$mac_address" --env UUID="$uuid" teneo-cli-runner
 
 # Step 10: Enable Docker to auto-start on boot
 echo -e "${INFO}Enabling auto-start for Docker service...${NC}"
