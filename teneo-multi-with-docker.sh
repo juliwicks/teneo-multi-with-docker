@@ -88,8 +88,8 @@ ALL_PROXY=$proxy_url
 EOF
 
 # Step 8: Create Docker Compose file
-echo -e "${INFO}Creating docker-compose.yml file...${NC}"
-cat <<EOF > docker-compose.yml
+echo -e "${INFO}Creating docker compose.yml file...${NC}"
+cat <<EOF > docker compose.yml
 version: "3.8"
 services:
   teneo-cli:
@@ -103,7 +103,7 @@ EOF
 
 # Step 9: Enable auto-start for the container
 echo -e "${INFO}Enabling auto-start for Docker container on system boot...${NC}"
-docker-compose up -d
+docker compose up -d
 sudo systemctl enable docker.service
 sudo systemctl enable containerd.service
 
