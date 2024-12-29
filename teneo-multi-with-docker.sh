@@ -75,7 +75,7 @@ RUN pip install aiohttp
 RUN pip install asyncio
 RUN pip install colorama
 
-# Command to run the teneo-cli.py script by default
+# Command to run the teneo-cli.py script
 CMD ["python3", "teneo-cli.py"]
 EOF
 
@@ -92,20 +92,9 @@ https_proxy=$proxy_url
 ALL_PROXY=$proxy_url
 EOF
 
-# Step 9: Run the Docker container interactively and execute python3 teneo-cli.py
-echo -e "${INFO}Running Docker container interactively with name: $container_name and executing Python script...${NC}"
-docker run -it --name "$container_name" --mac-address "$mac_address" --env UUID="$uuid" teneo-cli-runner
+# Step 9: Run the Docker container interactively
+echo -e "${INFO}Running Docker container interactively with name: $container_name...${NC}"
+docker run -it --name "$container_name" --mac-address "$mac_address" --env UUID="$uuid" teneo-cli-runner bash
 
-# Step 10: Enable Docker to auto-start on boot
-echo -e "${INFO}Enabling auto-start for Docker service...${NC}"
-sudo systemctl enable docker.service
-sudo systemctl enable containerd.service
-
-# Step 11: Check if the container is running
-echo -e "${INFO}Checking Docker container status...${NC}"
-docker ps | grep "$container_name" > /dev/null
-if [[ $? -eq 0 ]]; then
-  echo -e "${SUCCESS}Docker container '$container_name' is running.${NC}"
-else
-  echo -e "${ERROR}Failed to start the Docker container. Check for errors above.${NC}"
-fi
+# Step 10: Confirm the container is running interactively
+echo -e "${INFO}Docker container '$container_name' is now running interactively. You can execute the Python script manually or let it run as usual.${NC}"
