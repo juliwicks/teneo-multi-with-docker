@@ -87,10 +87,9 @@ https_proxy=$proxy_url
 ALL_PROXY=$proxy_url
 EOF
 
-# Step 8: Create Docker Compose file
+# Step 8: Create Docker Compose file (removed version to avoid warning)
 echo -e "${INFO}Creating docker-compose.yml file...${NC}"
 cat <<EOF > docker-compose.yml
-version: "3.8"
 services:
   teneo-cli:
     image: teneo-cli-runner
@@ -101,15 +100,23 @@ services:
     restart: always
 EOF
 
-# Step 9: Enable auto-start for the container
-echo -e "${INFO}Enabling auto-start for Docker container on system boot...${NC}"
-docker compose up -d
+# Step 9: Enable auto-start for the container and run it interactively
+echo -e "${INFO}Running Docker container interactively with name: $container_name${NC}"
+docker-compose up -d
+
+# Step 10: Enable Docker to auto-start on boot
+echo -e "${INFO}Enabling auto-start for Docker service...${NC}"
 sudo systemctl enable docker.service
 sudo systemctl enable containerd.service
 
-# Step 10: Confirm the container is running
+# Step 11: Check if the container is running and open it interactively
+echo -e "${INFO}Checking Docker container status...${NC}"
+docker ps | grep "$container_name" > /dev/null
 if [[ $? -eq 0 ]]; then
-  echo -e "${SUCCESS}Docker container '$container_name' is running and set to auto-start on boot.${NC}"
+  echo -e "${SUCCESS}Docker container '$container_name' is running.${NC}"
+  # Open the container interactively
+  echo -e "${INFO}Opening the Docker container interactively...${NC}"
+  docker exec -it "$container_name" /bin/bash
 else
   echo -e "${ERROR}Failed to start the Docker container. Check for errors above.${NC}"
 fi
